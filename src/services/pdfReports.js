@@ -4,8 +4,8 @@ const money = (n) => Number(n || 0).toLocaleString('en-GH', { minimumFractionDig
 const dateLabel = (d) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
 function header(doc, title, { from, to }) {
-  doc.font('Helvetica-Bold').fontSize(18).fillColor('#1a1714').text('VX Perfumery', { continued: false });
-  doc.font('Helvetica-Bold').fontSize(13).fillColor('#8a7340').text(title);
+  doc.font('Helvetica-Bold').fontSize(18).fillColor('#2b2118').text('Eggys', { continued: false });
+  doc.font('Helvetica-Bold').fontSize(13).fillColor('#e8a33d').text(title);
   doc.font('Helvetica').fontSize(9).fillColor('#666')
     .text(`Period: ${dateLabel(from)} – ${dateLabel(to)}`)
     .text(`Generated: ${new Date().toLocaleString('en-GB')}`);

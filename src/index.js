@@ -52,7 +52,7 @@ app.get('/api/docs.json', (_req, res) => res.json(swaggerSpec));
 app.use(
 	'/api/docs',
 	swaggerUi.serve,
-	swaggerUi.setup(swaggerSpec, { customSiteTitle: 'VX Perfumery API Docs' }),
+	swaggerUi.setup(swaggerSpec, { customSiteTitle: 'Eggys API Docs' }),
 );
 app.use('/api', apiLimiter, routes);
 
@@ -76,7 +76,7 @@ async function start() {
 		);
 	}
 	app.listen(port, () =>
-		console.log(`VX Perfumery API running on http://localhost:${port}`),
+		console.log(`Eggys API running on http://localhost:${port}`),
 	);
 }
 

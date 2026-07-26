@@ -1,8 +1,8 @@
 {
-  "name": "vx-perfumery-server",
+  "name": "eggys-server",
   "version": "0.1.0",
   "private": true,
-  "description": "VX Perfumery e-commerce API — Express + Sequelize (MSSQL)",
+  "description": "Eggys e-commerce API — Express + Sequelize (MSSQL)",
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",

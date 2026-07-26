@@ -8,10 +8,10 @@ const listInclude = [
   { model: Inventory, attributes: ['quantityInStock'] },
 ];
 
-// GET /products?search=&brand=&category=&minPrice=&maxPrice=&page=&pageSize=
+// GET /products?search=&brand=&category=&eggType=&minPrice=&maxPrice=&page=&pageSize=
 async function list(req, res, next) {
   try {
-    const { search, brand, category, gender, minPrice, maxPrice } = req.query;
+    const { search, brand, category, eggType, minPrice, maxPrice } = req.query;
     const page = Math.max(1, Number(req.query.page) || 1);
     const pageSize = Math.min(100, Number(req.query.pageSize) || 20);
 
@@ -22,7 +22,7 @@ async function list(req, res, next) {
         { description: { [Op.like]: `%${search}%` } },
       ];
     }
-    if (['male', 'female', 'unisex'].includes(gender)) where.gender = gender;
+    if (['chicken', 'duck', 'quail', 'guinea_fowl', 'turkey'].includes(eggType)) where.eggType = eggType;
     if (minPrice) where.price = { ...(where.price || {}), [Op.gte]: Number(minPrice) };
     if (maxPrice) where.price = { ...(where.price || {}), [Op.lte]: Number(maxPrice) };
 

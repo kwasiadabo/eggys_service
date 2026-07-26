@@ -3,10 +3,10 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const definition = {
   openapi: '3.0.3',
   info: {
-    title: 'VX Perfumery API',
+    title: 'Eggys API',
     version: '0.1.0',
     description:
-      'REST API for the VX Perfumery e-commerce platform — catalog browsing, cart/favorites, ' +
+      'REST API for the Eggys e-commerce platform — catalog browsing, cart/favorites, ' +
       'checkout with Paystack, order tracking, rider/delivery management, customer support ' +
       'issues, and admin analytics/reporting.',
   },
@@ -101,16 +101,14 @@ const definition = {
           description: { type: 'string' },
           price: { type: 'number', format: 'decimal' },
           costPrice: { type: 'number', format: 'decimal', nullable: true },
-          volumeMl: { type: 'integer', nullable: true },
-          fragranceType: {
+          packSize: { type: 'integer', nullable: true },
+          eggType: {
             type: 'string',
-            enum: ['eau_de_parfum', 'eau_de_toilette', 'parfum', 'cologne'],
+            enum: ['chicken', 'duck', 'quail', 'guinea_fowl', 'turkey'],
             nullable: true,
           },
-          gender: { type: 'string', enum: ['male', 'female', 'unisex'] },
-          topNotes: { type: 'string', nullable: true },
-          heartNotes: { type: 'string', nullable: true },
-          baseNotes: { type: 'string', nullable: true },
+          gradeSize: { type: 'string', enum: ['small', 'medium', 'large', 'extra_large', 'jumbo'], nullable: true },
+          farmingMethod: { type: 'string', enum: ['free_range', 'organic', 'caged', 'pasture_raised'], nullable: true },
           imageUrl: { type: 'string', nullable: true },
           isActive: { type: 'boolean' },
           BrandId: { type: 'string', format: 'uuid' },
@@ -129,12 +127,10 @@ const definition = {
           description: { type: 'string' },
           price: { type: 'number' },
           costPrice: { type: 'number' },
-          volumeMl: { type: 'integer' },
-          fragranceType: { type: 'string', enum: ['eau_de_parfum', 'eau_de_toilette', 'parfum', 'cologne'] },
-          gender: { type: 'string', enum: ['male', 'female', 'unisex'] },
-          topNotes: { type: 'string' },
-          heartNotes: { type: 'string' },
-          baseNotes: { type: 'string' },
+          packSize: { type: 'integer' },
+          eggType: { type: 'string', enum: ['chicken', 'duck', 'quail', 'guinea_fowl', 'turkey'] },
+          gradeSize: { type: 'string', enum: ['small', 'medium', 'large', 'extra_large', 'jumbo'] },
+          farmingMethod: { type: 'string', enum: ['free_range', 'organic', 'caged', 'pasture_raised'] },
           imageUrl: { type: 'string' },
           brandId: { type: 'string', format: 'uuid' },
           categoryId: { type: 'string', format: 'uuid' },

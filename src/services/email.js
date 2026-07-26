@@ -33,11 +33,11 @@ async function resolveGmailIPv4() {
 }
 
 const BRAND = {
-  name: 'VX Perfumery',
-  tagline: 'Fine Fragrances, Delivered',
-  dark: '#1a1a1a',
-  gold: '#c9a227',
-  cream: '#faf7f2',
+  name: 'Eggys',
+  tagline: 'Farm-Fresh Eggs, Delivered',
+  dark: '#2b2118',
+  gold: '#e8a33d',
+  cream: '#fff8ec',
   muted: '#6b6b6b',
 };
 
@@ -108,7 +108,7 @@ function layout({ preheader = '', title, bodyHtml }) {
           <table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
             <tr>
               <td style="background:${BRAND.dark};padding:28px 32px;text-align:center;">
-                <div style="color:${BRAND.gold};font-size:22px;letter-spacing:0.18em;font-weight:bold;">VX PERFUMERY</div>
+                <div style="color:${BRAND.gold};font-size:22px;letter-spacing:0.18em;font-weight:bold;">EGGYS</div>
                 <div style="color:#cfcfcf;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;margin-top:4px;">${BRAND.tagline}</div>
               </td>
             </tr>
@@ -119,7 +119,7 @@ function layout({ preheader = '', title, bodyHtml }) {
             </tr>
             <tr>
               <td style="background:#f4f1ec;padding:20px 32px;text-align:center;">
-                <div style="font-size:12px;color:${BRAND.muted};">VX Perfumery &middot; Accra, Ghana</div>
+                <div style="font-size:12px;color:${BRAND.muted};">Eggys &middot; Accra, Ghana</div>
                 <div style="font-size:12px;color:${BRAND.muted};margin-top:4px;">Questions about your order? Just reply to this email.</div>
               </td>
             </tr>
@@ -167,7 +167,7 @@ const templates = {
             </td>
             <td style="vertical-align:top;padding-bottom:16px;">
               <div style="font-size:13px;color:${BRAND.dark};font-weight:bold;">Preparing your order</div>
-              <div style="font-size:12px;color:${BRAND.muted};margin-top:2px;">We're packing your fragrance(s) now.</div>
+              <div style="font-size:12px;color:${BRAND.muted};margin-top:2px;">We're packing your eggs now.</div>
             </td>
           </tr>
           <tr>
@@ -185,7 +185,7 @@ const templates = {
             </td>
             <td style="vertical-align:top;">
               <div style="font-size:13px;color:${BRAND.dark};font-weight:bold;">Delivered</div>
-              <div style="font-size:12px;color:${BRAND.muted};margin-top:2px;">Your rider hands it over — enjoy your fragrance!</div>
+              <div style="font-size:12px;color:${BRAND.muted};margin-top:2px;">Your rider hands it over — enjoy your eggs!</div>
             </td>
           </tr>
         </table>
@@ -224,10 +224,10 @@ const templates = {
       title: 'Order Delivered',
       preheader: `Order ${p.orderNumber} has been delivered`,
       bodyHtml: `
-        <h1 style="font-size:20px;color:${BRAND.dark};margin:0 0 12px;">Enjoy your fragrance, ${p.name}!</h1>
+        <h1 style="font-size:20px;color:${BRAND.dark};margin:0 0 12px;">Enjoy your eggs, ${p.name}!</h1>
         <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;">
           Your order <strong style="color:${BRAND.dark};">${p.orderNumber}</strong> has been delivered.
-          Thank you for shopping with VX Perfumery — we hope to serve you again soon.
+          Thank you for shopping with Eggys — we hope to serve you again soon.
         </p>
       `,
     }),

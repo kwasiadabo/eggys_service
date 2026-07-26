@@ -10,7 +10,7 @@ const productInclude = [
  * MVP recommendation strategy, in priority order:
  * 1. Products from the user's favorite brands they haven't bought yet
  * 2. Best sellers overall (fills remaining slots)
- * Phase 2 upgrades this to collaborative filtering / fragrance-note matching.
+ * Phase 2 upgrades this to collaborative filtering / grade-and-size matching.
  */
 async function getRecommendationsForUser(userId, limit = 8) {
   const results = [];

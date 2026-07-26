@@ -41,12 +41,10 @@ const Product = sequelize.define('Product', {
   description: { type: DataTypes.TEXT },
   price: money(),
   costPrice: { type: DataTypes.DECIMAL(10, 2) }, // for profit analytics (admin only)
-  volumeMl: { type: DataTypes.INTEGER }, // 30, 50, 100...
-  fragranceType: { type: DataTypes.STRING }, // eau_de_parfum | eau_de_toilette | parfum | cologne
-  gender: { type: DataTypes.STRING, defaultValue: 'unisex' }, // male | female | unisex
-  topNotes: { type: DataTypes.STRING },
-  heartNotes: { type: DataTypes.STRING },
-  baseNotes: { type: DataTypes.STRING },
+  packSize: { type: DataTypes.INTEGER }, // eggs per carton/crate: 6, 12, 15, 30
+  eggType: { type: DataTypes.STRING }, // chicken | duck | quail | guinea_fowl | turkey
+  gradeSize: { type: DataTypes.STRING }, // small | medium | large | extra_large | jumbo
+  farmingMethod: { type: DataTypes.STRING }, // free_range | organic | caged | pasture_raised
   imageUrl: { type: DataTypes.STRING },
   isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
 });

@@ -3,23 +3,23 @@ const { NotificationLog } = require('../models');
 
 const templates = {
   order_confirmed: (p) =>
-    `Hi ${p.name}, your VX Perfumery order ${p.orderNumber} (GHS ${p.amount}) is confirmed. We'll text you when it ships. Thank you!`,
+    `Hi ${p.name}, your Eggys order ${p.orderNumber} (GHS ${p.amount}) is confirmed. We'll text you when it ships. Thank you!`,
   order_shipped: (p) =>
-    `Hi ${p.name}, your VX Perfumery order ${p.orderNumber} (${p.items}) has been dispatched. Rider: ${p.riderName} (${p.riderPhone}). Estimated delivery: ${p.eta}. Rider will call you to arrange delivery.`,
+    `Hi ${p.name}, your Eggys order ${p.orderNumber} (${p.items}) has been dispatched. Rider: ${p.riderName} (${p.riderPhone}). Estimated delivery: ${p.eta}. Rider will call you to arrange delivery.`,
   order_delivered: (p) =>
-    `Hi ${p.name}, your VX Perfumery order ${p.orderNumber} has been delivered. Thank you for shopping with us — we hope you enjoy your fragrance and look forward to serving you again!`,
+    `Hi ${p.name}, your Eggys order ${p.orderNumber} has been delivered. Thank you for shopping with us — we hope you enjoy your eggs and look forward to serving you again!`,
   payment_failed: (p) =>
-    `Hi ${p.name}, payment for VX Perfumery order ${p.orderNumber} failed. Please try again from your account page.`,
+    `Hi ${p.name}, payment for Eggys order ${p.orderNumber} failed. Please try again from your account page.`,
   low_stock_alert: (p) =>
-    `VX Perfumery stock alert: ${p.productName} is low (${p.quantity} left).`,
+    `Eggys stock alert: ${p.productName} is low (${p.quantity} left).`,
   delivery_assignment: (p) =>
-    `VX Perfumery delivery: Order ${p.orderNumber} (${p.items}) to ${p.address}. Customer: ${p.customerName} ${p.customerPhone}`,
+    `Eggys delivery: Order ${p.orderNumber} (${p.items}) to ${p.address}. Customer: ${p.customerName} ${p.customerPhone}`,
   rider_dispatch: (p) =>
-    `VX Perfumery dispatch: Hi ${p.name}, you have ${p.count} ${p.count === 1 ? 'delivery' : 'deliveries'}: ${p.stops} Confirm each one in the Rider Portal.`,
+    `Eggys dispatch: Hi ${p.name}, you have ${p.count} ${p.count === 1 ? 'delivery' : 'deliveries'}: ${p.stops} Confirm each one in the Rider Portal.`,
   rider_welcome: (p) =>
-    `Welcome to the VX Perfumery delivery team, ${p.name}! Your rider login PIN is ${p.pin}. Sign in with your phone number at the Rider Portal.`,
+    `Welcome to the Eggys delivery team, ${p.name}! Your rider login PIN is ${p.pin}. Sign in with your phone number at the Rider Portal.`,
   rider_pin_reset: (p) =>
-    `Hi ${p.name}, your VX Perfumery rider PIN has been reset. New PIN: ${p.pin}`,
+    `Hi ${p.name}, your Eggys rider PIN has been reset. New PIN: ${p.pin}`,
 };
 
 /** Nalo requires international format: 0241234567 -> 233241234567 */
@@ -44,7 +44,7 @@ async function sendSms(phoneNumber, messageType, params = {}) {
     const { data } = await axios.post(process.env.NALO_ENDPOINT, {
       key: process.env.NALO_API_KEY,
       msisdn,
-      sender_id: process.env.NALO_SENDER_ID || 'VXPerfumery',
+      sender_id: process.env.NALO_SENDER_ID || 'Eggys',
       message,
     });
     await NotificationLog.create({ ...log, status: 'sent', externalReferenceId: String(data?.job_id || data?.msg_id || '') });

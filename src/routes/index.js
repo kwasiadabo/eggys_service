@@ -127,8 +127,8 @@ router.get('/auth/me', requireAuth, auth.me);
  *         schema: { type: string }
  *         description: Category name
  *       - in: query
- *         name: gender
- *         schema: { type: string, enum: [male, female, unisex] }
+ *         name: eggType
+ *         schema: { type: string, enum: [chicken, duck, quail, guinea_fowl, turkey] }
  *       - in: query
  *         name: minPrice
  *         schema: { type: number }
