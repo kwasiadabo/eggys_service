@@ -1,19 +1,25 @@
 const router = require('express').Router();
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinary');
 const { requireAuth, optionalAuth, requireAdmin, requireRider, requireRiderPasswordSet } = require('../middleware/auth');
 const { authLimiter, lookupLimiter } = require('../middleware/rateLimit');
 
 const upload = multer({
-  storage: new CloudinaryStorage({
-    cloudinary,
-    params: { folder: 'eggys/products', allowed_formats: ['jpg', 'jpeg', 'png', 'webp'] },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) =>
     cb(file.mimetype.startsWith('image/') ? null : new Error('Only image files are allowed'), true),
 });
+
+function uploadBufferToCloudinary(buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'eggys/products', allowed_formats: ['jpg', 'jpeg', 'png', 'webp'] },
+      (err, result) => (err ? reject(err) : resolve(result))
+    );
+    stream.end(buffer);
+  });
+}
 const auth = require('../controllers/authController');
 const products = require('../controllers/productController');
 const cart = require('../controllers/cartController');
@@ -1157,9 +1163,14 @@ router.delete('/admin/delivery-fees/:id', requireAdmin, delivery.removeFee);
  *       401: { $ref: '#/components/responses/Unauthorized' }
  *       403: { $ref: '#/components/responses/Forbidden' }
  */
-router.post('/admin/upload', requireAdmin, upload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No image file received' });
-  res.status(201).json({ url: req.file.path, publicId: req.file.filename });
+router.post('/admin/upload', requireAdmin, upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image file received' });
+    const result = await uploadBufferToCloudinary(req.file.buffer);
+    res.status(201).json({ url: result.secure_url, publicId: result.public_id });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ===================== Admin — catalog & orders =====================
