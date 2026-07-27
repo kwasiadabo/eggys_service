@@ -46,6 +46,7 @@ const Product = sequelize.define('Product', {
   gradeSize: { type: DataTypes.STRING }, // small | medium | large | extra_large | jumbo
   farmingMethod: { type: DataTypes.STRING }, // free_range | organic | caged | pasture_raised
   imageUrl: { type: DataTypes.STRING },
+  cloudinaryPublicId: { type: DataTypes.STRING }, // used to delete the old image from Cloudinary on replace
   isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
 });
 
@@ -96,6 +97,10 @@ const Order = sequelize.define('Order', {
   shippingArea: { type: DataTypes.STRING }, // area / locality within the city
   shippingCity: { type: DataTypes.STRING },
   shippingRegion: { type: DataTypes.STRING },
+  // Captured only when the customer confirms they're checking out from the
+  // delivery location itself — helps the rider/dispatcher pinpoint the drop.
+  deliveryLatitude: { type: DataTypes.DECIMAL(10, 7) },
+  deliveryLongitude: { type: DataTypes.DECIMAL(10, 7) },
   deliveredAt: { type: DataTypes.DATE },
   // Set only for guest checkouts (UserId is null); a signed-in order's contact
   // info lives on the linked User instead.

@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
+const { sendEmail } = require('../services/email');
 
 function signToken(user) {
   return jwt.sign(
@@ -26,6 +27,10 @@ async function register(req, res, next) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await User.create({ firstName, lastName, email, passwordHash, phoneNumber });
+
+    // Fire-and-forget — registration shouldn't wait on the email provider.
+    sendEmail(user.email, 'account_created', { name: user.firstName, email: user.email });
+
     res.status(201).json({ token: signToken(user), user: publicUser(user) });
   } catch (err) {
     next(err);

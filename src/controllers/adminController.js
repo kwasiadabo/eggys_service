@@ -1,5 +1,6 @@
 const { Op, fn, col, literal } = require('sequelize');
 const { sequelize, Product, Brand, Category, Inventory, InventoryLog, Order, OrderItem, User, OrderStatusHistory, DeliveryPerson, Issue } = require('../models');
+const cloudinary = require('../config/cloudinary');
 const { sendSms } = require('../services/naloSms');
 const { sendEmail } = require('../services/email');
 const { buildSalesReport } = require('../services/pdfReports');
@@ -36,7 +37,13 @@ async function updateProduct(req, res, next) {
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
     const { brandId, categoryId, ...fields } = req.body;
+    const oldPublicId = product.cloudinaryPublicId;
     await product.update({ ...fields, ...(brandId && { BrandId: brandId }), ...(categoryId && { CategoryId: categoryId }) });
+    // Image was replaced (not just re-saved) — drop the old Cloudinary asset so it
+    // doesn't linger as orphaned storage.
+    if (fields.cloudinaryPublicId && oldPublicId && oldPublicId !== fields.cloudinaryPublicId) {
+      cloudinary.uploader.destroy(oldPublicId).catch((err) => console.error('Cloudinary cleanup failed:', err.message));
+    }
     res.json(product);
   } catch (err) {
     next(err);

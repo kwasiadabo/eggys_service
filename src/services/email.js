@@ -132,6 +132,20 @@ function layout({ preheader = '', title, bodyHtml }) {
 }
 
 const templates = {
+  account_created: (p) => ({
+    subject: `Welcome to Eggys, ${p.name}!`,
+    html: layout({
+      title: 'Welcome to Eggys',
+      preheader: 'Your account has been created — start shopping farm-fresh eggs',
+      bodyHtml: `
+        <h1 style="font-size:20px;color:${BRAND.dark};margin:0 0 12px;">Welcome, ${p.name}!</h1>
+        <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;margin:0 0 8px;">
+          Your Eggys account has been created with <strong style="color:${BRAND.dark};">${p.email}</strong>.
+          You're all set to browse and order farm-fresh eggs, delivered straight to your door.
+        </p>
+      `,
+    }),
+  }),
   order_confirmed: (p) => ({
     subject: `Order Confirmed — ${p.orderNumber}`,
     html: layout({

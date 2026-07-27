@@ -1,14 +1,14 @@
 const router = require('express').Router();
-const path = require('path');
 const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 const { requireAuth, optionalAuth, requireAdmin, requireRider, requireRiderPasswordSet } = require('../middleware/auth');
 const { authLimiter, lookupLimiter } = require('../middleware/rateLimit');
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: path.join(__dirname, '../../uploads'),
-    filename: (_req, file, cb) =>
-      cb(null, `${Date.now()}-${file.originalname.replace(/[^a-z0-9.\-]/gi, '_')}`),
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: { folder: 'eggys/products', allowed_formats: ['jpg', 'jpeg', 'png', 'webp'] },
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) =>
@@ -1143,13 +1143,14 @@ router.delete('/admin/delivery-fees/:id', requireAdmin, delivery.removeFee);
  *               image: { type: string, format: binary }
  *     responses:
  *       201:
- *         description: Uploaded — url can be stored as a product's imageUrl
+ *         description: Uploaded to Cloudinary — url can be stored as a product's imageUrl, publicId as its cloudinaryPublicId
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 url: { type: string, example: /uploads/1700000000000-photo.jpg }
+ *                 url: { type: string, example: https://res.cloudinary.com/demo/image/upload/v1700000000/eggys/products/abc123.jpg }
+ *                 publicId: { type: string, example: eggys/products/abc123 }
  *       400:
  *         description: No image file received, or invalid file type
  *         content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
@@ -1158,7 +1159,7 @@ router.delete('/admin/delivery-fees/:id', requireAdmin, delivery.removeFee);
  */
 router.post('/admin/upload', requireAdmin, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file received' });
-  res.status(201).json({ url: `/uploads/${req.file.filename}` });
+  res.status(201).json({ url: req.file.path, publicId: req.file.filename });
 });
 
 // ===================== Admin — catalog & orders =====================

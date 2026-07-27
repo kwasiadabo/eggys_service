@@ -243,8 +243,10 @@ async function dispatchRider(req, res, next) {
 
 // ---------- Rider portal ----------
 
-// riders only ever see and act on orders that have been dispatched to them
-const ACTIVE_DELIVERY_STATUSES = ['dispatched'];
+// riders see everything currently assigned to them — orders awaiting dispatch
+// as well as ones already dispatched — but can only *confirm* the latter
+// (enforced in riderConfirmDelivery below).
+const ACTIVE_DELIVERY_STATUSES = ['pending_delivery', 'dispatched'];
 
 /**
  * POST /rider/login { phone, credential } — issues a rider JWT.

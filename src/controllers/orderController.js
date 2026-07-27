@@ -17,12 +17,13 @@ function generateOrderNumber() {
 async function createOrder(req, res, next) {
   const t = await sequelize.transaction();
   try {
-    const { address, street, area, city, region, shippingCost = 0 } = req.body;
-    if (!address || !city || !region) {
+    const { address, street, area, city, region, shippingCost = 0, latitude, longitude } = req.body;
+    if (!area) {
       await t.rollback();
-      return res.status(400).json({ error: 'address, city and region are required' });
+      return res.status(400).json({ error: 'area is required' });
     }
     const shippingAddress = [address, street, area, city, region].filter(Boolean).join(', ');
+    const hasCoords = Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude));
 
     let user = null;
     let guestFields = {};
@@ -43,11 +44,11 @@ async function createOrder(req, res, next) {
       // Guest checkout — no server-side cart to build from; the client sends its
       // local cart items directly, plus contact info in place of an account.
       const { guestName, guestEmail, guestPhone, items } = req.body;
-      if (!guestName || !guestEmail || !guestPhone) {
+      if (!guestName || !guestPhone) {
         await t.rollback();
-        return res.status(400).json({ error: 'guestName, guestEmail and guestPhone are required to check out as a guest' });
+        return res.status(400).json({ error: 'guestName and guestPhone are required to check out as a guest' });
       }
-      guestFields = { guestName, guestEmail, guestPhone };
+      guestFields = { guestName, guestEmail: guestEmail || null, guestPhone };
 
       // Consolidate by product first — a client could (accidentally or not) send
       // the same product as separate line items, which would otherwise let each
@@ -108,6 +109,8 @@ async function createOrder(req, res, next) {
       shippingArea: area || '',
       shippingCity: city,
       shippingRegion: region,
+      deliveryLatitude: hasCoords ? Number(latitude) : null,
+      deliveryLongitude: hasCoords ? Number(longitude) : null,
       paystackReference: orderNumber,
     }, { transaction: t });
 
@@ -136,7 +139,7 @@ async function createOrder(req, res, next) {
     await t.commit();
 
     const payment = await paystack.initializeTransaction({
-      email: user ? user.email : guestFields.guestEmail,
+      email: (user ? user.email : guestFields.guestEmail) || `guest+${orderNumber}@eggys.example.com`,
       amount: totalAmount,
       reference: orderNumber,
       metadata: { orderId: order.id, orderNumber },
