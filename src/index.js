@@ -21,7 +21,7 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.set('trust proxy', 1);
 
 // CLIENT_URL may be a single origin or a comma-separated list (local dev + deployed frontend)
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5199')
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5198')
 	.split(',')
 	.map((origin) => origin.trim());
 

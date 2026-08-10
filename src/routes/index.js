@@ -1173,6 +1173,99 @@ router.post('/admin/upload', requireAdmin, upload.single('image'), async (req, r
   }
 });
 
+// ===================== Admin — users =====================
+
+/**
+ * @openapi
+ * /admin/users:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List customer accounts (search by name/email, filter by status)
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [active, suspended] }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: pageSize
+ *         schema: { type: integer, default: 20 }
+ *     responses:
+ *       200:
+ *         description: Paginated users
+ *       401: { $ref: '#/components/responses/Unauthorized' }
+ *       403: { $ref: '#/components/responses/Forbidden' }
+ */
+router.get('/admin/users', requireAdmin, admin.listUsers);
+
+/**
+ * @openapi
+ * /admin/users/{id}:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Update a user's profile details
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName: { type: string }
+ *               lastName: { type: string }
+ *               phoneNumber: { type: string }
+ *     responses:
+ *       200:
+ *         description: Updated
+ *       401: { $ref: '#/components/responses/Unauthorized' }
+ *       403: { $ref: '#/components/responses/Forbidden' }
+ *       404: { $ref: '#/components/responses/NotFound' }
+ */
+router.patch('/admin/users/:id', requireAdmin, admin.updateUser);
+
+/**
+ * @openapi
+ * /admin/users/{id}/status:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Suspend or reactivate a user account (blocks login and invalidates any active session)
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status: { type: string, enum: [active, suspended] }
+ *     responses:
+ *       200:
+ *         description: Updated
+ *       400:
+ *         description: Invalid status, or attempting to change your own account's status
+ *         content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+ *       401: { $ref: '#/components/responses/Unauthorized' }
+ *       403: { $ref: '#/components/responses/Forbidden' }
+ *       404: { $ref: '#/components/responses/NotFound' }
+ */
+router.patch('/admin/users/:id/status', requireAdmin, admin.setUserStatus);
+
 // ===================== Admin — catalog & orders =====================
 
 /**

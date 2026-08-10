@@ -62,6 +62,76 @@ async function deleteProduct(req, res, next) {
   }
 }
 
+// ---------- Users ----------
+
+const USER_ATTRS = ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'isAdmin', 'accountStatus', 'createdAt'];
+
+async function listUsers(req, res, next) {
+  try {
+    const { search, status } = req.query;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.min(100, Number(req.query.pageSize) || 20);
+
+    const where = {};
+    if (search) {
+      where[Op.or] = [
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+      ];
+    }
+    if (['active', 'suspended'].includes(status)) where.accountStatus = status;
+
+    const { rows, count } = await User.findAndCountAll({
+      where,
+      attributes: USER_ATTRS,
+      order: [['createdAt', 'DESC']],
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    });
+    res.json({ users: rows, total: count, page, pageSize });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateUser(req, res, next) {
+  try {
+    const user = await User.findByPk(req.params.id, { attributes: USER_ATTRS });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const { firstName, lastName, phoneNumber } = req.body;
+    await user.update({
+      ...(firstName !== undefined && { firstName }),
+      ...(lastName !== undefined && { lastName }),
+      ...(phoneNumber !== undefined && { phoneNumber }),
+    });
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Suspending blocks login (authController.login) and immediately invalidates any
+// existing session (requireAuth re-checks accountStatus on every request), rather
+// than just waiting out the 7-day token expiry.
+async function setUserStatus(req, res, next) {
+  try {
+    const { status } = req.body;
+    if (!['active', 'suspended'].includes(status)) {
+      return res.status(400).json({ error: "status must be 'active' or 'suspended'" });
+    }
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'You cannot change your own account status' });
+    }
+    const user = await User.findByPk(req.params.id, { attributes: USER_ATTRS });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    await user.update({ accountStatus: status });
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function restockProduct(req, res, next) {
   try {
     const quantity = Number(req.body.quantity);
@@ -505,6 +575,7 @@ async function inventoryReport(_req, res, next) {
 module.exports = {
   createProduct, updateProduct, deleteProduct, restockProduct,
   createBrand, createCategory,
+  listUsers, updateUser, setUserStatus,
   listOrders, updateOrderStatus, pendingOrdersCount,
   dashboard, salesReport, salesReportPdf, productSalesTrend, inventoryReport,
 };

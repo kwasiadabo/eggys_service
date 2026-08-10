@@ -12,11 +12,25 @@ function verifyBearer(req) {
   }
 }
 
-function requireAuth(req, res, next) {
+/**
+ * Re-checks account status against the DB on every request — same freshness
+ * concern as requireAdmin/requireRider: tokens live for 7 days, so without
+ * this a suspended customer's existing session would keep working until it
+ * naturally expired instead of being cut off immediately.
+ */
+async function requireAuth(req, res, next) {
   const payload = verifyBearer(req);
   if (!payload) return res.status(401).json({ error: 'Authentication required' });
-  req.user = payload;
-  next();
+  try {
+    const user = await User.findByPk(payload.id, { attributes: ['accountStatus'] });
+    if (!user || user.accountStatus !== 'active') {
+      return res.status(403).json({ error: 'Account is suspended' });
+    }
+    req.user = payload;
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 /** Decodes a bearer token into req.user if present, but never rejects — for routes usable by both signed-in and guest requests. */
