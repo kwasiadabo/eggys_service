@@ -172,14 +172,26 @@ async function listOrders(req, res, next) {
     if (req.query.status) where.status = req.query.status;
     if (req.query.rider === 'unassigned') where.DeliveryPersonId = null;
     else if (req.query.rider) where.DeliveryPersonId = req.query.rider;
-    if (req.query.date) {
-      // orders placed on a single calendar day (YYYY-MM-DD, server-local time)
-      const dayStart = new Date(`${req.query.date}T00:00:00`);
-      if (!Number.isNaN(dayStart.getTime())) {
-        const dayEnd = new Date(dayStart);
-        dayEnd.setDate(dayEnd.getDate() + 1);
-        where.createdAt = { [Op.gte]: dayStart, [Op.lt]: dayEnd };
+    // orders placed within a date range (YYYY-MM-DD, server-local time, both ends inclusive)
+    if (req.query.dateFrom || req.query.dateTo) {
+      const range = {};
+      let hasRange = false;
+      if (req.query.dateFrom) {
+        const from = new Date(`${req.query.dateFrom}T00:00:00`);
+        if (!Number.isNaN(from.getTime())) {
+          range[Op.gte] = from;
+          hasRange = true;
+        }
       }
+      if (req.query.dateTo) {
+        const to = new Date(`${req.query.dateTo}T00:00:00`);
+        if (!Number.isNaN(to.getTime())) {
+          to.setDate(to.getDate() + 1);
+          range[Op.lt] = to;
+          hasRange = true;
+        }
+      }
+      if (hasRange) where.createdAt = range;
     }
     if (req.query.destination) {
       const term = `%${req.query.destination}%`;
