@@ -4,6 +4,9 @@ const { sendSms } = require('../services/naloSms');
 const { sendEmail } = require('../services/email');
 const { orderRecipient, getOrderItems } = require('../services/orderNotify');
 
+const OWNER_NOTIFICATION_EMAILS = (process.env.ORDER_NOTIFICATION_EMAILS || '')
+  .split(',').map((e) => e.trim()).filter(Boolean);
+
 function generateOrderNumber() {
   const stamp = Date.now().toString(36).toUpperCase();
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -203,6 +206,21 @@ async function markOrderPaidAndNotify(order, verified) {
       return history.save();
     }
   }).catch((err) => console.error('order_confirmed notification error:', err.message));
+
+  // Store-owner notification — independent of the customer notification above,
+  // so a failure here never affects the customer's SMS/email or its tracking.
+  Promise.all(
+    OWNER_NOTIFICATION_EMAILS.map((ownerEmail) => sendEmail(ownerEmail, 'owner_new_order', {
+      orderNumber: order.orderNumber,
+      customerName: name || 'Guest',
+      customerContact: phone || email || '—',
+      amount: Number(order.totalAmount).toFixed(2),
+      subtotal: Number(order.subtotal).toFixed(2),
+      shippingCost: Number(order.shippingCost).toFixed(2),
+      address: order.shippingAddress,
+      items: getOrderItems(order),
+    }))
+  ).catch((err) => console.error('owner_new_order notification error:', err.message));
 }
 
 /**

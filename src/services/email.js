@@ -146,6 +146,26 @@ const templates = {
       `,
     }),
   }),
+  owner_new_order: (p) => ({
+    subject: `New Order — ${p.orderNumber} (GHS ${p.amount})`,
+    html: layout({
+      title: 'New Order',
+      preheader: `New order ${p.orderNumber} from ${p.customerName} — GHS ${p.amount}`,
+      bodyHtml: `
+        <h1 style="font-size:20px;color:${BRAND.dark};margin:0 0 12px;">New order received</h1>
+        <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;margin:0 0 8px;">
+          <strong style="color:${BRAND.dark};">${p.orderNumber}</strong> from ${p.customerName} (${p.customerContact}).
+        </p>
+        ${itemsTable(p.items)}
+        <table role="presentation" width="100%" style="margin-top:4px;">
+          <tr><td style="font-size:14px;color:${BRAND.muted};padding:4px 0;">Subtotal</td><td align="right" style="font-size:14px;color:${BRAND.dark};">${currency(p.subtotal)}</td></tr>
+          <tr><td style="font-size:14px;color:${BRAND.muted};padding:4px 0;">Delivery</td><td align="right" style="font-size:14px;color:${BRAND.dark};">${currency(p.shippingCost)}</td></tr>
+          <tr><td style="font-size:15px;font-weight:bold;color:${BRAND.dark};padding:10px 0 0;border-top:2px solid ${BRAND.dark};">Total</td><td align="right" style="font-size:15px;font-weight:bold;color:${BRAND.dark};padding:10px 0 0;border-top:2px solid ${BRAND.dark};">${currency(p.amount)}</td></tr>
+        </table>
+        <p style="font-size:13px;color:${BRAND.muted};margin-top:16px;">Delivering to: ${p.address}</p>
+      `,
+    }),
+  }),
   order_confirmed: (p) => ({
     subject: `Order Confirmed — ${p.orderNumber}`,
     html: layout({
