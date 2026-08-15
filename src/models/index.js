@@ -157,6 +157,19 @@ const Issue = sequelize.define('Issue', {
   respondedAt: { type: DataTypes.DATE },
 });
 
+const Question = sequelize.define('Question', {
+  id: id(),
+  question: { type: DataTypes.TEXT, allowNull: false },
+  answer: { type: DataTypes.TEXT },
+  status: { type: DataTypes.STRING, defaultValue: 'open' }, // open | answered
+  answeredAt: { type: DataTypes.DATE },
+  // Set only for guest submissions (UserId is null) — a signed-in asker's
+  // contact info lives on the linked User instead.
+  guestName: { type: DataTypes.STRING },
+  guestEmail: { type: DataTypes.STRING },
+  guestPhone: { type: DataTypes.STRING },
+});
+
 // ---------- Audit / logs ----------
 
 const OrderStatusHistory = sequelize.define('OrderStatusHistory', {
@@ -230,6 +243,9 @@ Issue.belongsTo(User);
 Order.hasMany(Issue);
 Issue.belongsTo(Order);
 
+User.hasMany(Question);
+Question.belongsTo(User, { foreignKey: { allowNull: true } }); // null UserId = guest question
+
 module.exports = {
   sequelize,
   User, Brand, Category, Product, Inventory,
@@ -237,5 +253,5 @@ module.exports = {
   Order, OrderItem, Payment,
   DeliveryPerson, DeliveryFee,
   OrderStatusHistory, InventoryLog, NotificationLog,
-  Issue,
+  Issue, Question,
 };

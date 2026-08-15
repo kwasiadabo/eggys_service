@@ -28,6 +28,7 @@ const orders = require('../controllers/orderController');
 const admin = require('../controllers/adminController');
 const delivery = require('../controllers/deliveryController');
 const issues = require('../controllers/issueController');
+const questions = require('../controllers/questionController');
 const reports = require('../controllers/reportController');
 
 // ===================== Auth =====================
@@ -651,6 +652,45 @@ router.post('/paystack/webhook', orders.paystackWebhook); // signature-verified,
  */
 router.post('/issues', requireAuth, issues.create);
 router.get('/issues', requireAuth, issues.listMine);
+
+// ===================== Questions (public Q&A) =====================
+
+/**
+ * @openapi
+ * /questions:
+ *   post:
+ *     tags: [Questions]
+ *     summary: Ask a question — usable by guests (with contact info) or signed-in users
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [question]
+ *             properties:
+ *               question: { type: string }
+ *               guestName: { type: string, description: Required for guests }
+ *               guestEmail: { type: string, description: Required for guests — the answer is sent here }
+ *               guestPhone: { type: string }
+ *     responses:
+ *       201:
+ *         description: Question submitted
+ *         content: { application/json: { schema: { $ref: '#/components/schemas/Question' } } }
+ *       400: { $ref: '#/components/responses/BadRequest' }
+ *   get:
+ *     tags: [Questions]
+ *     summary: List the signed-in user's own questions
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Questions
+ *         content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Question' } } } }
+ *       401: { $ref: '#/components/responses/Unauthorized' }
+ */
+router.post('/questions', optionalAuth, questions.create);
+router.get('/questions', requireAuth, questions.listMine);
 
 // ===================== Delivery fees (public) =====================
 
@@ -1773,5 +1813,74 @@ router.get('/admin/issues/open-count', requireAdmin, issues.openCount);
  *       404: { $ref: '#/components/responses/NotFound' }
  */
 router.patch('/admin/issues/:id', requireAdmin, issues.respond);
+
+// ===================== Admin — questions =====================
+
+/**
+ * @openapi
+ * /admin/questions:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List all submitted questions, optionally filtered by status
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [open, answered] }
+ *     responses:
+ *       200:
+ *         description: Questions
+ *         content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Question' } } } }
+ *       401: { $ref: '#/components/responses/Unauthorized' }
+ *       403: { $ref: '#/components/responses/Forbidden' }
+ */
+router.get('/admin/questions', requireAdmin, questions.listAll);
+
+/**
+ * @openapi
+ * /admin/questions/open-count:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Count of open (unanswered) questions — cheap poll target for the sidebar badge
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Count
+ *         content: { application/json: { schema: { type: object, properties: { count: { type: integer } } } } }
+ *       401: { $ref: '#/components/responses/Unauthorized' }
+ *       403: { $ref: '#/components/responses/Forbidden' }
+ */
+router.get('/admin/questions/open-count', requireAdmin, questions.openCount);
+
+/**
+ * @openapi
+ * /admin/questions/{id}:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Answer and/or update the status of a question
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               answer: { type: string, description: Answer text; sets status to answered if status is not also given, and emails the asker }
+ *               status: { type: string, enum: [open, answered] }
+ *     responses:
+ *       200:
+ *         description: Updated
+ *         content: { application/json: { schema: { $ref: '#/components/schemas/Question' } } }
+ *       400: { $ref: '#/components/responses/BadRequest' }
+ *       401: { $ref: '#/components/responses/Unauthorized' }
+ *       403: { $ref: '#/components/responses/Forbidden' }
+ *       404: { $ref: '#/components/responses/NotFound' }
+ */
+router.patch('/admin/questions/:id', requireAdmin, questions.respond);
 
 module.exports = router;

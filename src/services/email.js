@@ -32,6 +32,14 @@ async function resolveGmailIPv4() {
   return cachedIPv4;
 }
 
+// Drops the cached IP so the next getTransporter() call re-resolves — used
+// between retries so a retry doesn't just hit the same bad/unreachable IP
+// that timed out the first time.
+function invalidateCachedIPv4() {
+  cachedIPv4 = null;
+  cachedIPv4At = 0;
+}
+
 const BRAND = {
   name: 'Eggys',
   tagline: 'Farm-Fresh Eggs, Delivered',
@@ -280,11 +288,58 @@ const templates = {
       `,
     }),
   }),
+  question_answered: (p) => ({
+    subject: `We answered your question — Eggys`,
+    html: layout({
+      title: 'Your Question, Answered',
+      preheader: "We've answered the question you sent us",
+      bodyHtml: `
+        <h1 style="font-size:20px;color:${BRAND.dark};margin:0 0 12px;">Hi ${p.name},</h1>
+        <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;margin:0 0 16px;">
+          Thanks for reaching out — here's our answer to your question:
+        </p>
+        <table role="presentation" width="100%" style="background:${BRAND.cream};border-radius:6px;margin-bottom:16px;">
+          <tr><td style="padding:14px 16px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:${BRAND.muted};margin-bottom:6px;">Your question</div>
+            <div style="font-size:14px;color:${BRAND.dark};">${p.question}</div>
+          </td></tr>
+        </table>
+        <table role="presentation" width="100%" style="background:#f0f7f0;border-radius:6px;">
+          <tr><td style="padding:14px 16px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#2e7d32;margin-bottom:6px;">Our answer</div>
+            <div style="font-size:14px;color:${BRAND.dark};">${p.answer}</div>
+          </td></tr>
+        </table>
+      `,
+    }),
+  }),
+  owner_new_question: (p) => ({
+    subject: `New question from ${p.askerName}`,
+    html: layout({
+      title: 'New Question',
+      preheader: `New question from ${p.askerName} (${p.askerContact})`,
+      bodyHtml: `
+        <h1 style="font-size:20px;color:${BRAND.dark};margin:0 0 12px;">New question received</h1>
+        <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;margin:0 0 8px;">
+          From <strong style="color:${BRAND.dark};">${p.askerName}</strong> (${p.askerContact}).
+        </p>
+        <table role="presentation" width="100%" style="background:${BRAND.cream};border-radius:6px;margin-top:8px;">
+          <tr><td style="padding:14px 16px;font-size:14px;color:${BRAND.dark};">${p.question}</td></tr>
+        </table>
+      `,
+    }),
+  }),
 };
 
+const MAX_SEND_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2000;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /**
- * Send a branded email via Gmail SMTP and record the attempt in NotificationLog.
- * Never throws — a failed email must not break order processing.
+ * Send a branded email via Gmail SMTP and record the outcome in NotificationLog.
+ * Retries transient failures (e.g. a connection timeout to a since-unreachable
+ * cached IP) up to MAX_SEND_ATTEMPTS before giving up. Never throws — a failed
+ * email must not break order processing.
  */
 async function sendEmail(to, messageType, params = {}) {
   const build = templates[messageType];
@@ -293,27 +348,36 @@ async function sendEmail(to, messageType, params = {}) {
   const { subject, html } = build(params);
   const log = { recipient: to, messageType, provider: 'gmail_smtp' };
 
-  const t = await getTransporter();
-  if (!t) {
-    console.error(`Email not sent (${messageType} → ${to}): set EMAIL_USER and EMAIL_APP_PASSWORD in .env`);
-    await NotificationLog.create({ ...log, status: 'failed', errorMessage: 'Email not configured' }).catch(() => {});
-    return null;
+  let lastError = null;
+  for (let attempt = 1; attempt <= MAX_SEND_ATTEMPTS; attempt++) {
+    const t = await getTransporter();
+    if (!t) {
+      console.error(`Email not sent (${messageType} → ${to}): set EMAIL_USER and EMAIL_APP_PASSWORD in .env`);
+      await NotificationLog.create({ ...log, status: 'failed', errorMessage: 'Email not configured' }).catch(() => {});
+      return null;
+    }
+
+    try {
+      const info = await t.sendMail({
+        from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        html,
+      });
+      await NotificationLog.create({ ...log, status: 'sent', externalReferenceId: info.messageId });
+      return info;
+    } catch (err) {
+      lastError = err;
+      console.error(`Email attempt ${attempt}/${MAX_SEND_ATTEMPTS} failed (${messageType} → ${to}):`, err.message);
+      if (attempt < MAX_SEND_ATTEMPTS) {
+        invalidateCachedIPv4();
+        await sleep(RETRY_DELAY_MS);
+      }
+    }
   }
 
-  try {
-    const info = await t.sendMail({
-      from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-    });
-    await NotificationLog.create({ ...log, status: 'sent', externalReferenceId: info.messageId });
-    return info;
-  } catch (err) {
-    console.error(`Email failed (${messageType} → ${to}):`, err.message);
-    await NotificationLog.create({ ...log, status: 'failed', errorMessage: err.message }).catch(() => {});
-    return null;
-  }
+  await NotificationLog.create({ ...log, status: 'failed', errorMessage: lastError?.message }).catch(() => {});
+  return null;
 }
 
 module.exports = { sendEmail, templates };

@@ -3,6 +3,7 @@ const paystack = require('../services/paystack');
 const { sendSms } = require('../services/naloSms');
 const { sendEmail } = require('../services/email');
 const { orderRecipient, getOrderItems } = require('../services/orderNotify');
+const { isWithinDeliveryZone } = require('../services/geofence');
 
 const OWNER_NOTIFICATION_EMAILS = (process.env.ORDER_NOTIFICATION_EMAILS || '')
   .split(',').map((e) => e.trim()).filter(Boolean);
@@ -27,6 +28,16 @@ async function createOrder(req, res, next) {
     }
     const shippingAddress = [address, street, area, city, region].filter(Boolean).join(', ');
     const hasCoords = Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude));
+
+    // Only enforced when coordinates are actually shared — a customer who
+    // declines/lacks location sharing is trusted on the free-text address
+    // instead, matching the softer client-side warning for that case.
+    if (hasCoords && !isWithinDeliveryZone(Number(latitude), Number(longitude))) {
+      await t.rollback();
+      return res.status(400).json({
+        error: 'This delivery location is outside our current service area (Regimanuel Gray, Balloon Gate estate).',
+      });
+    }
 
     let user = null;
     let guestFields = {};
