@@ -313,6 +313,26 @@ const templates = {
       `,
     }),
   }),
+  dispatch_reminder: (p) => ({
+    subject: `⚠ Order ${p.orderNumber} not yet dispatched (${p.minutesLate} min)`,
+    html: layout({
+      title: 'Dispatch Reminder',
+      preheader: `Order ${p.orderNumber} has been waiting ${p.minutesLate} minutes for dispatch`,
+      bodyHtml: `
+        <table role="presentation" width="100%" style="background:#fdecea;border-radius:6px;margin-bottom:16px;">
+          <tr><td style="padding:14px 16px;">
+            <span style="font-size:14px;color:#c62828;font-weight:bold;">Not yet dispatched — ${p.minutesLate} minutes since payment</span>
+          </td></tr>
+        </table>
+        <h1 style="font-size:20px;color:${BRAND.dark};margin:0 0 12px;">Order ${p.orderNumber}</h1>
+        <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;margin:0 0 8px;">
+          Customer: <strong style="color:${BRAND.dark};">${p.customerName}</strong> (${p.customerContact}) — GHS ${p.amount}
+        </p>
+        <p style="font-size:13px;color:${BRAND.muted};">Delivering to: ${p.address}</p>
+        <p style="font-size:14px;color:${BRAND.dark};margin-top:16px;">Please assign a rider and dispatch this order.</p>
+      `,
+    }),
+  }),
   owner_new_question: (p) => ({
     subject: `New question from ${p.askerName}`,
     html: layout({

@@ -187,6 +187,7 @@ async function dispatchRider(req, res, next) {
 
     for (const order of orders) {
       order.status = 'dispatched';
+      order.dispatchedAt = new Date();
       await order.save();
       const history = await OrderStatusHistory.create({ OrderId: order.id, status: 'dispatched' });
       const { phone, name, email } = orderRecipient(order);

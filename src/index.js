@@ -4,11 +4,13 @@ const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const cron = require('node-cron');
 const swaggerUi = require('swagger-ui-express');
 const routes = require('./routes');
 const { sequelize } = require('./models');
 const swaggerSpec = require('./config/swagger');
 const { apiLimiter } = require('./middleware/rateLimit');
+const { checkOverdueDispatches } = require('./jobs/dispatchReminder');
 
 const app = express();
 
@@ -78,6 +80,14 @@ async function start() {
 	app.listen(port, () =>
 		console.log(`Eggys API running on http://localhost:${port}`),
 	);
+
+	// Every 10 minutes, nudge staff about any paid order that's gone an hour
+	// without being dispatched. Wrapped so a bad run never crashes the process.
+	cron.schedule('*/10 * * * *', () => {
+		checkOverdueDispatches().catch((err) =>
+			console.error('dispatch-reminder job error:', err.message),
+		);
+	});
 }
 
 start();

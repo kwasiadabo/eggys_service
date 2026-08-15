@@ -7,6 +7,8 @@ const { isWithinDeliveryZone } = require('../services/geofence');
 
 const OWNER_NOTIFICATION_EMAILS = (process.env.ORDER_NOTIFICATION_EMAILS || '')
   .split(',').map((e) => e.trim()).filter(Boolean);
+const OWNER_NOTIFICATION_PHONES = (process.env.ORDER_NOTIFICATION_PHONES || '')
+  .split(',').map((p) => p.trim()).filter(Boolean);
 
 function generateOrderNumber() {
   const stamp = Date.now().toString(36).toUpperCase();
@@ -177,6 +179,7 @@ async function createOrder(req, res, next) {
 async function markOrderPaidAndNotify(order, verified) {
   order.status = 'pending_delivery';
   order.paymentStatus = 'completed';
+  order.confirmedAt = new Date();
   await order.save();
   await Payment.findOrCreate({
     where: { paystackReference: order.paystackReference, status: 'success' },
@@ -220,8 +223,8 @@ async function markOrderPaidAndNotify(order, verified) {
 
   // Store-owner notification — independent of the customer notification above,
   // so a failure here never affects the customer's SMS/email or its tracking.
-  Promise.all(
-    OWNER_NOTIFICATION_EMAILS.map((ownerEmail) => sendEmail(ownerEmail, 'owner_new_order', {
+  Promise.all([
+    ...OWNER_NOTIFICATION_EMAILS.map((ownerEmail) => sendEmail(ownerEmail, 'owner_new_order', {
       orderNumber: order.orderNumber,
       customerName: name || 'Guest',
       customerContact: phone || email || '—',
@@ -230,8 +233,14 @@ async function markOrderPaidAndNotify(order, verified) {
       shippingCost: Number(order.shippingCost).toFixed(2),
       address: order.shippingAddress,
       items: getOrderItems(order),
-    }))
-  ).catch((err) => console.error('owner_new_order notification error:', err.message));
+    })),
+    ...OWNER_NOTIFICATION_PHONES.map((ownerPhone) => sendSms(ownerPhone, 'owner_new_order', {
+      orderNumber: order.orderNumber,
+      customerName: name || 'Guest',
+      customerContact: phone || email || '—',
+      amount: Number(order.totalAmount).toFixed(2),
+    })),
+  ]).catch((err) => console.error('owner_new_order notification error:', err.message));
 }
 
 /**

@@ -86,7 +86,7 @@ const Address = sequelize.define('Address', {
 const Order = sequelize.define('Order', {
   id: id(),
   orderNumber: { type: DataTypes.STRING, allowNull: false, unique: true },
-  status: { type: DataTypes.STRING, defaultValue: 'pending' }, // pending | paid | shipped | delivered | cancelled
+  status: { type: DataTypes.STRING, defaultValue: 'pending' }, // pending | pending_delivery | dispatched | delivered | cancelled
   subtotal: money(),
   shippingCost: money(),
   totalAmount: money(),
@@ -101,6 +101,14 @@ const Order = sequelize.define('Order', {
   // delivery location itself — helps the rider/dispatcher pinpoint the drop.
   deliveryLatitude: { type: DataTypes.DECIMAL(10, 7) },
   deliveryLongitude: { type: DataTypes.DECIMAL(10, 7) },
+  // Set when payment is confirmed (status -> pending_delivery) — the "order
+  // received" instant the 1-hour dispatch-reminder job measures from, since
+  // an unpaid order was never really received into the fulfillment queue.
+  confirmedAt: { type: DataTypes.DATE },
+  dispatchedAt: { type: DataTypes.DATE },
+  // Set once the dispatch-reminder job emails/texts staff about this order,
+  // so a stuck order gets nudged about exactly once, not on every poll.
+  dispatchReminderSentAt: { type: DataTypes.DATE },
   deliveredAt: { type: DataTypes.DATE },
   // Set only for guest checkouts (UserId is null); a signed-in order's contact
   // info lives on the linked User instead.

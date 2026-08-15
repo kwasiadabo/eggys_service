@@ -169,7 +169,11 @@ async function createCategory(req, res, next) {
 async function listOrders(req, res, next) {
   try {
     const where = {};
-    if (req.query.status) where.status = req.query.status;
+    // 'active' is a sentinel (not a real status) meaning "everything still in
+    // the fulfillment pipeline" — used by the admin Orders page's Current tab
+    // so it doesn't need to know/enumerate every non-delivered status value.
+    if (req.query.status === 'active') where.status = { [Op.ne]: 'delivered' };
+    else if (req.query.status) where.status = req.query.status;
     if (req.query.rider === 'unassigned') where.DeliveryPersonId = null;
     else if (req.query.rider) where.DeliveryPersonId = req.query.rider;
     // orders placed within a date range (YYYY-MM-DD, server-local time, both ends inclusive)
@@ -195,12 +199,33 @@ async function listOrders(req, res, next) {
     }
     if (req.query.destination) {
       const term = `%${req.query.destination}%`;
+      // Resolve matching customers to ids first rather than filtering on
+      // `$User.column$` directly — combined with the OrderItem hasMany
+      // include below and `limit`, an include-column condition in the
+      // top-level where can make Sequelize build a subquery that never
+      // joins User at all, silently dropping the filter (or erroring on MSSQL).
+      const matchingUsers = await User.findAll({
+        where: {
+          [Op.or]: [
+            { firstName: { [Op.like]: term } },
+            { lastName: { [Op.like]: term } },
+            { phoneNumber: { [Op.like]: term } },
+            { email: { [Op.like]: term } },
+          ],
+        },
+        attributes: ['id'],
+      });
       where[Op.or] = [
         { shippingAddress: { [Op.like]: term } },
         { shippingStreet: { [Op.like]: term } },
         { shippingArea: { [Op.like]: term } },
         { shippingCity: { [Op.like]: term } },
         { shippingRegion: { [Op.like]: term } },
+        { orderNumber: { [Op.like]: term } },
+        { guestName: { [Op.like]: term } },
+        { guestPhone: { [Op.like]: term } },
+        { guestEmail: { [Op.like]: term } },
+        ...(matchingUsers.length ? [{ UserId: { [Op.in]: matchingUsers.map((u) => u.id) } }] : []),
       ];
     }
     const orders = await Order.findAll({
@@ -250,6 +275,7 @@ async function updateOrderStatus(req, res, next) {
     }
 
     order.status = status;
+    if (status === 'dispatched') order.dispatchedAt = new Date();
     if (status === 'delivered') order.deliveredAt = new Date();
     await order.save();
 

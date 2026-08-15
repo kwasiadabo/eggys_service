@@ -20,6 +20,10 @@ const templates = {
     `Welcome to the Eggys delivery team, ${p.name}! Your rider login PIN is ${p.pin}. Sign in with your phone number at the Rider Portal.`,
   rider_pin_reset: (p) =>
     `Hi ${p.name}, your Eggys rider PIN has been reset. New PIN: ${p.pin}`,
+  owner_new_order: (p) =>
+    `Eggys: New order ${p.orderNumber} from ${p.customerName} (${p.customerContact}) — GHS ${p.amount}.`,
+  dispatch_reminder: (p) =>
+    `Eggys: Order ${p.orderNumber} (${p.customerName}, GHS ${p.amount}) has not been dispatched ${p.minutesLate} min after payment. Please dispatch it.`,
 };
 
 /** Nalo requires international format: 0241234567 -> 233241234567 */
