@@ -11,6 +11,7 @@ const { sequelize } = require('./models');
 const swaggerSpec = require('./config/swagger');
 const { apiLimiter } = require('./middleware/rateLimit');
 const { checkOverdueDispatches } = require('./jobs/dispatchReminder');
+const { checkUnpaidOrders } = require('./jobs/unpaidOrderCleanup');
 
 const app = express();
 
@@ -86,6 +87,14 @@ async function start() {
 	cron.schedule('*/10 * * * *', () => {
 		checkOverdueDispatches().catch((err) =>
 			console.error('dispatch-reminder job error:', err.message),
+		);
+	});
+
+	// Every 15 minutes, remind customers whose payment is still pending after
+	// 12 hours, and cancel (releasing reserved stock) any still unpaid at 24h.
+	cron.schedule('*/15 * * * *', () => {
+		checkUnpaidOrders().catch((err) =>
+			console.error('unpaid-order-cleanup job error:', err.message),
 		);
 	});
 }

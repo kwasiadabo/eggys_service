@@ -106,6 +106,9 @@ const Order = sequelize.define('Order', {
   // an unpaid order was never really received into the fulfillment queue.
   confirmedAt: { type: DataTypes.DATE },
   dispatchedAt: { type: DataTypes.DATE },
+  // Set once the unpaid-order job nudges the customer at 12h still pending,
+  // so they're reminded exactly once before the 24h auto-cancellation.
+  paymentReminderSentAt: { type: DataTypes.DATE },
   // Set once the dispatch-reminder job emails/texts staff about this order,
   // so a stuck order gets nudged about exactly once, not on every poll.
   dispatchReminderSentAt: { type: DataTypes.DATE },

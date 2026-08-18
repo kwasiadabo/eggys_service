@@ -397,4 +397,4 @@ async function lookupOrder(req, res, next) {
   }
 }
 
-module.exports = { createOrder, paystackWebhook, verifyPayment, verifyByReference, listMyOrders, getOrder, lookupOrder };
+module.exports = { createOrder, paystackWebhook, verifyPayment, verifyByReference, listMyOrders, getOrder, lookupOrder, markOrderPaidAndNotify };

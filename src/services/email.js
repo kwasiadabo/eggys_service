@@ -271,6 +271,9 @@ const templates = {
           Your order <strong style="color:${BRAND.dark};">${p.orderNumber}</strong> has been delivered.
           Thank you for shopping with Eggys — we hope to serve you again soon.
         </p>
+        <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;margin-top:12px;">
+          Always order from <a href="https://www.eggys.store" style="color:${BRAND.dark};">www.eggys.store</a> and we will deliver to your door.
+        </p>
       `,
     }),
   }),
@@ -284,6 +287,34 @@ const templates = {
         <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;">
           We couldn't process payment for order <strong style="color:${BRAND.dark};">${p.orderNumber}</strong>.
           Please try again from your account page.
+        </p>
+      `,
+    }),
+  }),
+  payment_reminder: (p) => ({
+    subject: `Complete your payment — Order ${p.orderNumber}`,
+    html: layout({
+      title: 'Payment Reminder',
+      preheader: `Your order ${p.orderNumber} is still awaiting payment`,
+      bodyHtml: `
+        <h1 style="font-size:20px;color:${BRAND.dark};margin:0 0 12px;">Hi ${p.name},</h1>
+        <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;">
+          Your order <strong style="color:${BRAND.dark};">${p.orderNumber}</strong> (GHS ${p.amount}) is still waiting on payment.
+          Complete checkout soon — unpaid orders are automatically cancelled after 24 hours and the items released back to stock.
+        </p>
+      `,
+    }),
+  }),
+  order_cancelled_unpaid: (p) => ({
+    subject: `Order cancelled — ${p.orderNumber}`,
+    html: layout({
+      title: 'Order Cancelled',
+      preheader: `Order ${p.orderNumber} was cancelled — payment wasn't completed in time`,
+      bodyHtml: `
+        <h1 style="font-size:20px;color:${BRAND.dark};margin:0 0 12px;">Hi ${p.name},</h1>
+        <p style="font-size:14px;color:${BRAND.muted};line-height:1.6;">
+          Your order <strong style="color:${BRAND.dark};">${p.orderNumber}</strong> (GHS ${p.amount}) has been cancelled because payment wasn't completed within 24 hours.
+          No charge was made. Feel free to place a new order anytime — we'd love to have you back.
         </p>
       `,
     }),

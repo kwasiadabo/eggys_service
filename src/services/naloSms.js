@@ -7,7 +7,7 @@ const templates = {
   order_shipped: (p) =>
     `Hi ${p.name}, your Eggys order ${p.orderNumber} (${p.items}) has been dispatched. Rider: ${p.riderName} (${p.riderPhone}). Estimated delivery: ${p.eta}. Rider will call you to arrange delivery.`,
   order_delivered: (p) =>
-    `Hi ${p.name}, your Eggys order ${p.orderNumber} has been delivered. Thank you for shopping with us — we hope you enjoy your eggs and look forward to serving you again!`,
+    `Hi ${p.name}, your Eggys order ${p.orderNumber} has been delivered. Thank you for shopping with us — we hope you enjoy your eggs and look forward to serving you again! Always order from https://www.eggys.store and we will deliver to your door.`,
   payment_failed: (p) =>
     `Hi ${p.name}, payment for Eggys order ${p.orderNumber} failed. Please try again from your account page.`,
   low_stock_alert: (p) =>
@@ -24,6 +24,10 @@ const templates = {
     `Eggys: New order ${p.orderNumber} from ${p.customerName} (${p.customerContact}) — GHS ${p.amount}.`,
   dispatch_reminder: (p) =>
     `Eggys: Order ${p.orderNumber} (${p.customerName}, GHS ${p.amount}) has not been dispatched ${p.minutesLate} min after payment. Please dispatch it.`,
+  payment_reminder: (p) =>
+    `Hi ${p.name}, your Eggys order ${p.orderNumber} (GHS ${p.amount}) is still awaiting payment. Complete checkout soon — unpaid orders are cancelled after 24 hours.`,
+  order_cancelled_unpaid: (p) =>
+    `Hi ${p.name}, your Eggys order ${p.orderNumber} (GHS ${p.amount}) was cancelled because payment wasn't completed in time. Feel free to place a new order anytime.`,
 };
 
 /** Nalo requires international format: 0241234567 -> 233241234567 */
